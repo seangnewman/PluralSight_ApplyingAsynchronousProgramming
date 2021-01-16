@@ -27,7 +27,17 @@ namespace StockAnalyzer.Windows
 
         private async void Search_Click(object sender, RoutedEventArgs e)
         {
-            BeforeLoadingStockData();
+            try
+            {
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            //BeforeLoadingStockData();
             #region asynchronous call must be replaced with asynchronous HttpClient
             //var client = new WebClient();
 
@@ -69,16 +79,33 @@ namespace StockAnalyzer.Windows
             #endregion
             #region IntroducingAsynchronous Methods
             // Return the Task
-            var getStocksTask =  GetStocks();
+            var getStocksTask = GetStocks();
             // returned Task needs to be awaited 
             await getStocksTask;
             #endregion
-            AfterLoadingStockData();
+            #region catching exceptions
+            try
+            {
+                BeforeLoadingStockData();
+                await GetStocks();   // validate no exceptions in async operations
+            }
+            catch (Exception ex)
+            {
+
+                Notes.Text = ex.Message;
+            }
+            finally
+            {
+                AfterLoadingStockData();
+            }
+
+            #endregion  
+            //AfterLoadingStockData();
         }
 
-        
+
         private async Task GetStocks()
-            // The Task returned from an async method is a reference to the operation,  the result of the operation or potential errors
+        // The Task returned from an async method is a reference to the operation,  the result of the operation or potential errors
         {
             try
             {
@@ -88,7 +115,10 @@ namespace StockAnalyzer.Windows
             }
             catch (Exception ex)
             {
-                Notes.Text += ex.Message;
+                // Because the await keyword was used, this continuation throws the exception to the calling thread
+                // otherwise it is swallowed by the Task
+                //Notes.Text += ex.Message;
+                throw ex;
             }
         }
 
