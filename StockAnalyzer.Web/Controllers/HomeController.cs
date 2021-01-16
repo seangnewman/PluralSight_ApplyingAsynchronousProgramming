@@ -9,7 +9,7 @@ namespace StockAnalyzer.Web.Controllers
 {
     public class HomeController : Controller
     {
-        private static string API_URL = "https://ps-async.fekberg.com/api/stocks";
+        private static readonly string API_URL = "https://ps-async.fekberg.com/api/stocks";
 
         public async Task<ActionResult> Index()
         {

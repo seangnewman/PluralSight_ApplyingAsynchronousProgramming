@@ -17,8 +17,8 @@ namespace StockAnalyzer.Windows
 {
     public partial class MainWindow : Window
     {
-        private static string API_URL = "https://ps-async.fekberg.com/api/stocks";
-        private Stopwatch stopwatch = new Stopwatch();
+        private static readonly string API_URL = "https://ps-async.fekberg.com/api/stocks";
+        private readonly Stopwatch stopwatch = new Stopwatch();
 
         public MainWindow()
         {
@@ -27,12 +27,9 @@ namespace StockAnalyzer.Windows
 
 
 
-        //private async void Search_Click(object sender, RoutedEventArgs e)
-        private  void Search_Click(object sender, RoutedEventArgs e)
+        // private async void Search_Click(object sender, RoutedEventArgs e)
+        private void Search_Click(object sender, RoutedEventArgs e)
         {
-
-            
-             
 
             //BeforeLoadingStockData();
             #region asynchronous call must be replaced with asynchronous HttpClient
@@ -76,9 +73,9 @@ namespace StockAnalyzer.Windows
             #endregion
             #region IntroducingAsynchronous Methods
             // Return the Task
-            var getStocksTask = GetStocks();
+            //var getStocksTask = GetStocks();
             // returned Task needs to be awaited 
-            await getStocksTask;
+            // await getStocksTask;
             #endregion
             #region catching exceptions
             //try
@@ -100,19 +97,108 @@ namespace StockAnalyzer.Windows
 
             #region Introducing Tasks
 
+            //try
+            //{
+            //    BeforeLoadingStockData();
+
+            //    var lines = File.ReadAllLines("StockPrices_Small.csv");
+            //    var data = new List<StockPrice>();
+            //    foreach (var line in lines.Skip(1))
+            //    {
+            //        var price = StockPrice.FromCSV(line);
+            //        data.Add(price);
+            //    }
+
+            //    Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //}
+
+            #endregion
+
+            #region CreatingAsynchronousOperations
+            //try
+            //{
+            //    BeforeLoadingStockData();
+
+            //    // Queue work to the thread pool
+            //    await Task.Run(() =>
+            //    {
+            //        var lines = File.ReadAllLines("StockPrices_Small.csv");
+            //        var data = new List<StockPrice>();
+            //        foreach (var line in lines.Skip(1))
+            //        {
+            //            var price = StockPrice.FromCSV(line);
+            //            data.Add(price);
+            //        }
+            //        Dispatcher.Invoke( () => {
+            //            Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+            //        });
+
+            //    });
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //}
+            #endregion
+
+            #region Obtaining the Result of the Task
             try
             {
                 BeforeLoadingStockData();
 
-                var lines = File.ReadAllLines("StockPrices_Small.csv");
-                var data = new List<StockPrice>();
-                foreach (var line in lines.Skip(1))
-                {
-                    var price = StockPrice.FromCSV(line);
-                    data.Add(price);
-                }
+                // Queue work to the thread pool
+                var loadLinesTask = Task.Run(() =>
+               {
+                   var lines = File.ReadAllLines("StockPrices_Small.csv");
+                   return lines;
 
-                Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+
+
+
+               });
+
+                var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
+                {
+
+                    // We can use Result because this is a continuation and occurs after the previous task has completed.
+                    var lines = completedTask.Result;
+
+                    var data = new List<StockPrice>();
+                    foreach (var line in lines.Skip(1))
+                    {
+                        var price = StockPrice.FromCSV(line);
+                        data.Add(price);
+                    }
+                    Dispatcher.Invoke(() =>
+                    {
+                        Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+                    });
+                });
+
+                processsStocksTask.ContinueWith(_ =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        AfterLoadingStockData();
+                    });
+
+                });
+
             }
             catch (Exception ex)
             {
@@ -121,9 +207,69 @@ namespace StockAnalyzer.Windows
             }
             finally
             {
-                AfterLoadingStockData();
-            }
 
+            }
+            #endregion
+
+            #region NestedAsynchronousOperations
+            try
+            {
+                BeforeLoadingStockData();
+
+                // Queue work to the thread pool
+                var loadLinesTask = Task.Run(async () =>
+               {
+                   using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
+                   {
+                       var lines = new List<string>();
+                       string line;
+                       while ((line = await stream.ReadLineAsync()) != null)
+                       {
+                           lines.Add(line);
+                       }
+                       return lines;
+
+                   }
+
+               });
+
+                var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
+                {
+
+                    // We can use Result because this is a continuation and occurs after the previous task has completed.
+                    var lines = completedTask.Result;
+
+                    var data = new List<StockPrice>();
+                    foreach (var line in lines.Skip(1))
+                    {
+                        var price = StockPrice.FromCSV(line);
+                        data.Add(price);
+                    }
+                    Dispatcher.Invoke(() =>
+                    {
+                        Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+                    });
+                });
+
+                processsStocksTask.ContinueWith(_ =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        AfterLoadingStockData();
+                    });
+
+                });
+
+            }
+            catch (Exception ex)
+            {
+
+                Notes.Text = ex.Message;
+            }
+            finally
+            {
+
+            }
             #endregion
             //AfterLoadingStockData();
         }
