@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
 
@@ -34,6 +35,8 @@ namespace StockAnalyzer.Windows
 
             //// Simulate that the web call takes a very long time
             //Thread.Sleep(10000);
+
+
             #endregion
 
             #region using HttpClient
@@ -52,6 +55,31 @@ namespace StockAnalyzer.Windows
             #endregion
             #region using the DataStore
 
+            //try
+            //{
+            //    var store = new DataStore();
+            //    var responseTask = store.GetStockPrices(StockIdentifier.Text);
+            //    Stocks.ItemsSource = await responseTask;
+            //}
+            //catch (Exception ex)
+            //{
+            //    Notes.Text += ex.Message;
+            //}
+
+            #endregion
+            #region IntroducingAsynchronous Methods
+            // Return the Task
+            var getStocksTask =  GetStocks();
+            // returned Task needs to be awaited 
+            await getStocksTask;
+            #endregion
+            AfterLoadingStockData();
+        }
+
+        
+        private async Task GetStocks()
+            // The Task returned from an async method is a reference to the operation,  the result of the operation or potential errors
+        {
             try
             {
                 var store = new DataStore();
@@ -62,17 +90,7 @@ namespace StockAnalyzer.Windows
             {
                 Notes.Text += ex.Message;
             }
-
-            #endregion
-            AfterLoadingStockData();
         }
-
-
-
-
-
-
-
 
         private void BeforeLoadingStockData()
         {
