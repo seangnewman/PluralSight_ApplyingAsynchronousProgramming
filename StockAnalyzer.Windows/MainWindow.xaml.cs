@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
+using StockAnalyzer.Core;
 using StockAnalyzer.Core.Domain;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Windows;
 using System.Windows.Navigation;
@@ -21,21 +23,38 @@ namespace StockAnalyzer.Windows
 
 
 
-        private void Search_Click(object sender, RoutedEventArgs e)
+        private async void Search_Click(object sender, RoutedEventArgs e)
         {
             BeforeLoadingStockData();
+            #region asynchronous call must be replaced with asynchronous HttpClient
+            //var client = new WebClient();
 
-            var client = new WebClient();
+            //var content = client.DownloadString($"{API_URL}/{StockIdentifier.Text}");
 
-            var content = client.DownloadString($"{API_URL}/{StockIdentifier.Text}");
+            //// Simulate that the web call takes a very long time
+            //Thread.Sleep(10000);
+            #endregion
 
-            // Simulate that the web call takes a very long time
-            Thread.Sleep(10000);
+            #region using HttpClient
+            //using (var client = new HttpClient())
+            //{
+            //    var responseTask = client.GetAsync($"{API_URL}/{StockIdentifier.Text}");
 
-            var data = JsonConvert.DeserializeObject<IEnumerable<StockPrice>>(content);
+            //    var response = await responseTask;
 
-            Stocks.ItemsSource = data;
+            //    var content = await response.Content.ReadAsStringAsync();
 
+            //    var data = JsonConvert.DeserializeObject<IEnumerable<StockPrice>>(content);
+
+            //    Stocks.ItemsSource = data;
+            //}
+            #endregion
+            #region using the DataStore
+            var store = new DataStore();
+            var responseTask = store.GetStockPrices(StockIdentifier.Text);
+
+            Stocks.ItemsSource = await responseTask;
+            #endregion
             AfterLoadingStockData();
         }
 
