@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using StockAnalyzer.Core;
 using StockAnalyzer.Core.Domain;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
@@ -50,10 +51,18 @@ namespace StockAnalyzer.Windows
             //}
             #endregion
             #region using the DataStore
-            var store = new DataStore();
-            var responseTask = store.GetStockPrices(StockIdentifier.Text);
 
-            Stocks.ItemsSource = await responseTask;
+            try
+            {
+                var store = new DataStore();
+                var responseTask = store.GetStockPrices(StockIdentifier.Text);
+                Stocks.ItemsSource = await responseTask;
+            }
+            catch (Exception ex)
+            {
+                Notes.Text += ex.Message;
+            }
+
             #endregion
             AfterLoadingStockData();
         }
