@@ -723,6 +723,23 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Execution Context and Controlling Continuation
+            //try
+            //{
+            //    var data = await GetStocksFor(StockIdentifier.Text);
+
+            //    Notes.Text = "Stocks Loaded!";
+
+            //    Stocks.ItemsSource = data;
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+
+            #endregion
+
+            #region ConfigureAwait in ASP.NET
             try
             {
                 var data = await GetStocksFor(StockIdentifier.Text);
@@ -736,9 +753,7 @@ namespace StockAnalyzer.Windows
 
                 Notes.Text = ex.Message;
             }
-            
             #endregion
-
             //AfterLoadingStockData();
         }
         private async Task<IEnumerable<StockPrice>>GetStocksFor(string identifier)

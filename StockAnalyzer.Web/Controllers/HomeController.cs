@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using StockAnalyzer.Core.Domain;
+using StockAnalyzer.Core.Services;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 
@@ -41,6 +43,30 @@ namespace StockAnalyzer.Web.Controllers
             ViewBag.Message = "Your contact page.";
 
             return View();
+        }
+
+        public async Task<ActionResult> ConfigureAwaitDemo()
+        {
+            var context = System.Web.HttpContext.Current;
+
+            var data = await GetStocks();
+
+            var context2 = System.Web.HttpContext.Current;
+
+            return Json(data);
+        }
+
+        private async Task<IEnumerable<StockPrice>> GetStocks()
+        {
+            var service = new StockService();
+
+            var task = service.GetStockPricesFor("MSFT", CancellationToken.None);
+
+            var data = await task.ConfigureAwait(false);
+
+            var context = System.Web.HttpContext.Current;
+
+            return data;
         }
     }
 }
