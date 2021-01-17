@@ -14,7 +14,6 @@ namespace StockAnalyzer.Tests
         {
             var service = new MockStockService();
             var stocks = await service.GetStockPricesFor("MSFT", CancellationToken.None);
-
             Assert.AreEqual(stocks.Count(), 2);
         }
     }

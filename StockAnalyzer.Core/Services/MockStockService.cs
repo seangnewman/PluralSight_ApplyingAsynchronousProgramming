@@ -17,7 +17,6 @@ namespace StockAnalyzer.Core.Services
                new StockPrice{Identifier = "MSFT", Change = 0.5m, ChangePercent = 0.75m},
                new StockPrice{Identifier = "GOOGL", Change = 0.5m, ChangePercent = 0.75m},
                new StockPrice{Identifier = "GOOGL", Change = 0.5m, ChangePercent = 0.75m},
-
             };
 
             var task = Task.FromResult(stocks.Where(stock => stock.Identifier == stockIdentifier));
