@@ -158,58 +158,58 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Obtaining the Result of the Task
-            try
-            {
-                BeforeLoadingStockData();
+            //try
+            //{
+            //    BeforeLoadingStockData();
 
-                // Queue work to the thread pool
-                var loadLinesTask = Task.Run(() =>
-               {
-                   var lines = File.ReadAllLines("StockPrices_Small.csv");
-                   return lines;
-
-
+            //    // Queue work to the thread pool
+            //    var loadLinesTask = Task.Run(() =>
+            //   {
+            //       var lines = File.ReadAllLines("StockPrices_Small.csv");
+            //       return lines;
 
 
-               });
 
-                var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
-                {
 
-                    // We can use Result because this is a continuation and occurs after the previous task has completed.
-                    var lines = completedTask.Result;
+            //   });
 
-                    var data = new List<StockPrice>();
-                    foreach (var line in lines.Skip(1))
-                    {
-                        var price = StockPrice.FromCSV(line);
-                        data.Add(price);
-                    }
-                    Dispatcher.Invoke(() =>
-                    {
-                        Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
-                    });
-                });
+            //    var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
+            //    {
 
-                processsStocksTask.ContinueWith(_ =>
-                {
-                    Dispatcher.Invoke(() =>
-                    {
-                        AfterLoadingStockData();
-                    });
+            //        // We can use Result because this is a continuation and occurs after the previous task has completed.
+            //        var lines = completedTask.Result;
 
-                });
+            //        var data = new List<StockPrice>();
+            //        foreach (var line in lines.Skip(1))
+            //        {
+            //            var price = StockPrice.FromCSV(line);
+            //            data.Add(price);
+            //        }
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+            //        });
+            //    });
 
-            }
-            catch (Exception ex)
-            {
+            //    processsStocksTask.ContinueWith(_ =>
+            //    {
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            AfterLoadingStockData();
+            //        });
 
-                Notes.Text = ex.Message;
-            }
-            finally
-            {
+            //    });
 
-            }
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+
+            //}
             #endregion
 
             #region NestedAsynchronousOperations
@@ -425,6 +425,88 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Cancellation with HttpClient
+            //if (cancellationTokenSource != null)
+            //{
+            //    //Already have an instance of the cancellation token source?
+            //    //This means the button has previously been pressed
+            //    cancellationTokenSource.Cancel();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search";
+            //    return;
+            //}
+            //try
+            //{
+            //    cancellationTokenSource = new CancellationTokenSource();
+
+            //    cancellationTokenSource.Token.Register(() => {
+            //        Notes.Text = "Cancellation Requested";
+            //    });
+
+            //    Search.Content = "Cancel"; // Sets the button text
+
+            //    BeforeLoadingStockData();
+
+            //    var service = new StockService();
+            //    var data = await service.GetStockPricesFor(StockIdentifier.Text, cancellationTokenSource.Token);
+            //    Stocks.ItemsSource = data;
+
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search"; // We are on the UI thread, so set the button text
+            //}
+            //#endregion
+            //#region Exploring Task Parallel Library 
+            //if (cancellationTokenSource != null)
+            //{
+            //    //Already have an instance of the cancellation token source?
+            //    //This means the button has previously been pressed
+            //    cancellationTokenSource.Cancel();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search";
+            //    return;
+            //}
+            //try
+            //{
+            //    cancellationTokenSource = new CancellationTokenSource();
+
+            //    cancellationTokenSource.Token.Register(() => {
+            //        Notes.Text = "Cancellation Requested";
+            //    });
+
+            //    Search.Content = "Cancel"; // Sets the button text
+
+            //    BeforeLoadingStockData();
+
+            //    var service = new StockService();
+            //    var data = await service.GetStockPricesFor(StockIdentifier.Text, cancellationTokenSource.Token);
+            //    Stocks.ItemsSource = data;
+
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search"; // We are on the UI thread, so set the button text
+            //}
+
+            #endregion
+
+            #region Knowing when all or any tasks  completes
             if (cancellationTokenSource != null)
             {
                 //Already have an instance of the cancellation token source?
@@ -437,6 +519,7 @@ namespace StockAnalyzer.Windows
             try
             {
                 cancellationTokenSource = new CancellationTokenSource();
+                //cancellationTokenSource.CancelAfter(1000);
 
                 cancellationTokenSource.Token.Register(() => {
                     Notes.Text = "Cancellation Requested";
@@ -445,11 +528,34 @@ namespace StockAnalyzer.Windows
                 Search.Content = "Cancel"; // Sets the button text
 
                 BeforeLoadingStockData();
+                var identifiers = StockIdentifier.Text.Split(',', ' ');
 
                 var service = new StockService();
-                var data = await service.GetStockPricesFor(StockIdentifier.Text, cancellationTokenSource.Token);
-                Stocks.ItemsSource = data;
-              
+
+                var loadingTasks = new List<Task<IEnumerable<StockPrice>>>();
+
+                foreach (var identifier in identifiers)
+                {
+                    // Add task for each stock, running in parallel
+                    var loadTask =  service.GetStockPricesFor(identifier, cancellationTokenSource.Token);
+                    loadingTasks.Add(loadTask);
+                }
+
+                var timeoutTask = Task.Delay(120000);
+                var allStocksLoadingTask = Task.WhenAll(loadingTasks);
+
+                var completedTask = await Task.WhenAny(timeoutTask, allStocksLoadingTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    cancellationTokenSource.Cancel();
+                    throw new OperationCanceledException("Timeout!");
+                }
+
+               
+
+                Stocks.ItemsSource = allStocksLoadingTask.Result.SelectMany(x => x);
+
 
             }
             catch (Exception ex)
@@ -463,6 +569,7 @@ namespace StockAnalyzer.Windows
                 cancellationTokenSource = null;
                 Search.Content = "Search"; // We are on the UI thread, so set the button text
             }
+
             #endregion
             //AfterLoadingStockData();
         }
