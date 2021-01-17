@@ -507,6 +507,72 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Knowing when all or any tasks  completes
+            //if (cancellationTokenSource != null)
+            //{
+            //    //Already have an instance of the cancellation token source?
+            //    //This means the button has previously been pressed
+            //    cancellationTokenSource.Cancel();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search";
+            //    return;
+            //}
+            //try
+            //{
+            //    cancellationTokenSource = new CancellationTokenSource();
+            //    //cancellationTokenSource.CancelAfter(1000);
+
+            //    cancellationTokenSource.Token.Register(() => {
+            //        Notes.Text = "Cancellation Requested";
+            //    });
+
+            //    Search.Content = "Cancel"; // Sets the button text
+
+            //    BeforeLoadingStockData();
+            //    var identifiers = StockIdentifier.Text.Split(',', ' ');
+
+            //    var service = new StockService();
+
+            //    var loadingTasks = new List<Task<IEnumerable<StockPrice>>>();
+
+            //    foreach (var identifier in identifiers)
+            //    {
+            //        // Add task for each stock, running in parallel
+            //        var loadTask =  service.GetStockPricesFor(identifier, cancellationTokenSource.Token);
+            //        loadingTasks.Add(loadTask);
+            //    }
+
+            //    var timeoutTask = Task.Delay(120000);
+            //    var allStocksLoadingTask = Task.WhenAll(loadingTasks);
+
+            //    var completedTask = await Task.WhenAny(timeoutTask, allStocksLoadingTask);
+
+            //    if (completedTask == timeoutTask)
+            //    {
+            //        cancellationTokenSource.Cancel();
+            //        throw new OperationCanceledException("Timeout!");
+            //    }
+
+               
+
+            //    Stocks.ItemsSource = allStocksLoadingTask.Result.SelectMany(x => x);
+
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //    cancellationTokenSource = null;
+            //    Search.Content = "Search"; // We are on the UI thread, so set the button text
+            //}
+
+            #endregion
+
+            #region Precomputed Results of a Task
             if (cancellationTokenSource != null)
             {
                 //Already have an instance of the cancellation token source?
@@ -530,14 +596,14 @@ namespace StockAnalyzer.Windows
                 BeforeLoadingStockData();
                 var identifiers = StockIdentifier.Text.Split(',', ' ');
 
-                var service = new StockService();
+                var service = new MockStockService();
 
                 var loadingTasks = new List<Task<IEnumerable<StockPrice>>>();
 
                 foreach (var identifier in identifiers)
                 {
                     // Add task for each stock, running in parallel
-                    var loadTask =  service.GetStockPricesFor(identifier, cancellationTokenSource.Token);
+                    var loadTask = service.GetStockPricesFor(identifier, cancellationTokenSource.Token);
                     loadingTasks.Add(loadTask);
                 }
 
@@ -552,7 +618,7 @@ namespace StockAnalyzer.Windows
                     throw new OperationCanceledException("Timeout!");
                 }
 
-               
+
 
                 Stocks.ItemsSource = allStocksLoadingTask.Result.SelectMany(x => x);
 
