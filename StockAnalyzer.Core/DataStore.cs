@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using StockAnalyzer.Core.Domain;
 
@@ -16,7 +17,7 @@ namespace StockAnalyzer.Core
         {
             this.basePath = basePath;
         }
-
+       
         public async Task<IList<StockPrice>> GetStockPrices(string stockIdentifier)
         {
             var prices = new List<StockPrice>();

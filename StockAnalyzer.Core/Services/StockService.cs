@@ -41,5 +41,8 @@ namespace StockAnalyzer.Core.Services
                 return JsonConvert.DeserializeObject<IEnumerable<StockPrice>>(content);
             }
         }
+        
     }
+
+   
 }
