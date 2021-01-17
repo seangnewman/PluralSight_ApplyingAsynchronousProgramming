@@ -25,7 +25,7 @@ namespace StockAnalyzer.Windows
             InitializeComponent();
         }
 
-
+        CancellationTokenSource cancellationTokenSource;
 
         // private async void Search_Click(object sender, RoutedEventArgs e)
         private void Search_Click(object sender, RoutedEventArgs e)
@@ -273,26 +273,102 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Handling Task success and failure
-            try
+            //try
+            //{
+            //    BeforeLoadingStockData();
+
+            //    // Queue work to the thread pool
+            //    var loadLinesTask = Task.Run(async () =>
+            //    {
+            //        using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
+            //        {
+            //            var lines = new List<string>();
+            //            string line;
+            //            while ((line = await stream.ReadLineAsync()) != null)
+            //            {
+            //                lines.Add(line);
+            //            }
+            //            return lines;
+
+            //        }
+
+            //    });
+
+            //    loadLinesTask.ContinueWith(t =>
+            //    {
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            Notes.Text = t.Exception.InnerException.Message;
+            //        });
+            //    }, TaskContinuationOptions.OnlyOnFaulted);
+
+            //    var processsStocksTask = loadLinesTask.ContinueWith(t =>
+            //    {
+            //        // Log Something
+            //        return t.Result;
+            //    }).ContinueWith((completedTask) =>
+            //   {
+
+            //        // We can use Result because this is a continuation and occurs after the previous task has completed.
+            //        var lines = completedTask.Result;
+
+            //       var data = new List<StockPrice>();
+            //       foreach (var line in lines.Skip(1))
+            //       {
+            //           var price = StockPrice.FromCSV(line);
+            //           data.Add(price);
+            //       }
+            //       Dispatcher.Invoke(() =>
+            //       {
+            //           Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+            //       });
+            //   }, TaskContinuationOptions.OnlyOnRanToCompletion);
+
+            //    processsStocksTask.ContinueWith(_ =>
+            //    {
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            AfterLoadingStockData();
+            //        });
+
+            //    });
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+
+            //}
+            #endregion
+
+            #region Cancellation and Stopping a Task
+              if(cancellationTokenSource != null)
             {
+                //Already have an instance of the cancellation token source?
+                //This means the button has previously been pressed
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource = null;
+                Search.Content = "Search";
+                return;
+            }
+               try
+            {
+                cancellationTokenSource = new CancellationTokenSource();
+
+                cancellationTokenSource.Token.Register( () => {
+                    Notes.Text = "Cancellation Requested";
+                });
+
+                Search.Content = "Cancel"; // Sets the button text
+
                 BeforeLoadingStockData();
 
                 // Queue work to the thread pool
-                var loadLinesTask = Task.Run(async () =>
-                {
-                    using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
-                    {
-                        var lines = new List<string>();
-                        string line;
-                        while ((line = await stream.ReadLineAsync()) != null)
-                        {
-                            lines.Add(line);
-                        }
-                        return lines;
-
-                    }
-
-                });
+                Task<List<string>> loadLinesTask = SearchForStocks(cancellationTokenSource.Token);
 
                 loadLinesTask.ContinueWith(t =>
                 {
@@ -307,31 +383,33 @@ namespace StockAnalyzer.Windows
                     // Log Something
                     return t.Result;
                 }).ContinueWith((completedTask) =>
-               {
+                {
 
                     // We can use Result because this is a continuation and occurs after the previous task has completed.
                     var lines = completedTask.Result;
 
-                   var data = new List<StockPrice>();
-                   foreach (var line in lines.Skip(1))
-                   {
-                       var price = StockPrice.FromCSV(line);
-                       data.Add(price);
-                   }
-                   Dispatcher.Invoke(() =>
-                   {
-                       Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
-                   });
-               }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                    var data = new List<StockPrice>();
+                    foreach (var line in lines.Skip(1))
+                    {
+                        var price = StockPrice.FromCSV(line);
+                        data.Add(price);
+                    }
+                    Dispatcher.Invoke(() =>
+                    {
+                        Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+                    });
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
                 processsStocksTask.ContinueWith(_ =>
                 {
                     Dispatcher.Invoke(() =>
                     {
                         AfterLoadingStockData();
+                        cancellationTokenSource = null;
+                        Search.Content = "Search"; // We are on the UI thread, so set the button text
                     });
 
-                };
+                });
 
             }
             catch (Exception ex)
@@ -347,6 +425,28 @@ namespace StockAnalyzer.Windows
             //AfterLoadingStockData();
         }
 
+        private static Task<List<string>> SearchForStocks(CancellationToken cancellationToken)
+        {
+            return Task.Run(async () =>
+            {
+                using (var stream = new StreamReader(File.OpenRead("StockPrices_Small.csv")))
+                {
+                    var lines = new List<string>();
+                    string line;
+                    while ((line = await stream.ReadLineAsync()) != null)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            break;
+                        }
+                        lines.Add(line);
+                    }
+                    return lines;
+
+                }
+
+            }, cancellationToken);
+        }
 
         private async Task GetStocks()
         // The Task returned from an async method is a reference to the operation,  the result of the operation or potential errors
