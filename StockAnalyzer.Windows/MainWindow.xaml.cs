@@ -212,44 +212,117 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region NestedAsynchronousOperations
+            //try
+            //{
+            //    BeforeLoadingStockData();
+
+            //    // Queue work to the thread pool
+            //    var loadLinesTask = Task.Run(async () =>
+            //   {
+            //       using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
+            //       {
+            //           var lines = new List<string>();
+            //           string line;
+            //           while ((line = await stream.ReadLineAsync()) != null)
+            //           {
+            //               lines.Add(line);
+            //           }
+            //           return lines;
+
+            //       }
+
+            //   });
+
+            //    var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
+            //    {
+
+            //        // We can use Result because this is a continuation and occurs after the previous task has completed.
+            //        var lines = completedTask.Result;
+
+            //        var data = new List<StockPrice>();
+            //        foreach (var line in lines.Skip(1))
+            //        {
+            //            var price = StockPrice.FromCSV(line);
+            //            data.Add(price);
+            //        }
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+            //        });
+            //    });
+
+            //    processsStocksTask.ContinueWith(_ =>
+            //    {
+            //        Dispatcher.Invoke(() =>
+            //        {
+            //            AfterLoadingStockData();
+            //        });
+
+            //    });
+
+            //}
+            //catch (Exception ex)
+            //{
+
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+
+            //}
+            #endregion
+
+            #region Handling Task success and failure
             try
             {
                 BeforeLoadingStockData();
 
                 // Queue work to the thread pool
                 var loadLinesTask = Task.Run(async () =>
-               {
-                   using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
-                   {
-                       var lines = new List<string>();
-                       string line;
-                       while ((line = await stream.ReadLineAsync()) != null)
-                       {
-                           lines.Add(line);
-                       }
-                       return lines;
-
-                   }
-
-               });
-
-                var processsStocksTask = loadLinesTask.ContinueWith((completedTask) =>
                 {
+                    using (var stream = new StreamReader(File.OpenRead("StockProces_Small.csv")))
+                    {
+                        var lines = new List<string>();
+                        string line;
+                        while ((line = await stream.ReadLineAsync()) != null)
+                        {
+                            lines.Add(line);
+                        }
+                        return lines;
+
+                    }
+
+                });
+
+                loadLinesTask.ContinueWith(t =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        Notes.Text = t.Exception.InnerException.Message;
+                    });
+                }, TaskContinuationOptions.OnlyOnFaulted);
+
+                var processsStocksTask = loadLinesTask.ContinueWith(t =>
+                {
+                    // Log Something
+                    return t.Result;
+                }).ContinueWith((completedTask) =>
+               {
 
                     // We can use Result because this is a continuation and occurs after the previous task has completed.
                     var lines = completedTask.Result;
 
-                    var data = new List<StockPrice>();
-                    foreach (var line in lines.Skip(1))
-                    {
-                        var price = StockPrice.FromCSV(line);
-                        data.Add(price);
-                    }
-                    Dispatcher.Invoke(() =>
-                    {
-                        Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
-                    });
-                });
+                   var data = new List<StockPrice>();
+                   foreach (var line in lines.Skip(1))
+                   {
+                       var price = StockPrice.FromCSV(line);
+                       data.Add(price);
+                   }
+                   Dispatcher.Invoke(() =>
+                   {
+                       Stocks.ItemsSource = data.Where(sp => sp.Identifier == StockIdentifier.Text);
+                   });
+               }, TaskContinuationOptions.OnlyOnRanToCompletion);
 
                 processsStocksTask.ContinueWith(_ =>
                 {
@@ -258,7 +331,7 @@ namespace StockAnalyzer.Windows
                         AfterLoadingStockData();
                     });
 
-                });
+                };
 
             }
             catch (Exception ex)
