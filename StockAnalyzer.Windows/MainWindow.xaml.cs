@@ -776,7 +776,13 @@ namespace StockAnalyzer.Windows
 
             #region Implications of Async and Await
             //Each method marked as async will have a state machine generated for that method
-            Notes.Text = "";
+            // Notes.Text = "";
+            #endregion
+
+            #region Reducing the Amount of State Machnes
+            //await new StateMachineDemo().Run();
+            #endregion
+            #region Deadlocking
             #endregion
         }
         private async Task Run()
