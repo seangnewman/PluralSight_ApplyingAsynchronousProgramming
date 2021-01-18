@@ -773,8 +773,21 @@ namespace StockAnalyzer.Windows
                 Notes.Text = ex.Message;
             }
             #endregion
-        }
 
+            #region Implications of Async and Await
+            //Each method marked as async will have a state machine generated for that method
+            Notes.Text = "";
+            #endregion
+        }
+        private async Task Run()
+        {
+            var result = await Task.Run( () => "Pluralsight");
+
+            if (result == "Pluralsight")
+            {
+               Debug.WriteLine(result);
+            }
+        }
         private async Task<IEnumerable<StockPrice>>GetStocksFor(string identifier)
         {
             var service = new StockService();

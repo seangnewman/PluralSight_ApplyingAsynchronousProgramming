@@ -35,9 +35,11 @@ namespace StockAnalyzer.Windows
 
         private async void Search_Click(object sender, RoutedEventArgs e)
         {
+            #region Asynchronous Streams and Disposable
             try
             {
                 BeforeLoadingStockData();
+
                 var identifiers = StockIdentifier.Text.Split(' ', ',');
 
                 var data = new ObservableCollection<StockPrice>();
@@ -65,6 +67,7 @@ namespace StockAnalyzer.Windows
             {
                 AfterLoadingStockData();
             }
+            #endregion
         }
 
         private async Task<IEnumerable<StockPrice>>
