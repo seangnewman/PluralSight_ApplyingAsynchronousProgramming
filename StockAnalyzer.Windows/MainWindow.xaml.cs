@@ -29,8 +29,8 @@ namespace StockAnalyzer.Windows
 
         CancellationTokenSource cancellationTokenSource;
 
-         private async void Search_Click(object sender, RoutedEventArgs e)
-        //private void Search_Click(object sender, RoutedEventArgs e)
+         //private async void Search_Click(object sender, RoutedEventArgs e)
+        private void Search_Click(object sender, RoutedEventArgs e)
         {
 
             //BeforeLoadingStockData();
@@ -783,6 +783,14 @@ namespace StockAnalyzer.Windows
             //await new StateMachineDemo().Run();
             #endregion
             #region Deadlocking
+            try
+            {
+                Task.Run(SearchForStocks).Wait();
+            }
+            catch (Exception ex)
+            {
+                Notes.Text = ex.Message;
+            }
             #endregion
         }
         private async Task Run()
@@ -800,6 +808,23 @@ namespace StockAnalyzer.Windows
             var data = await service.GetStockPricesFor(identifier, CancellationToken.None).ConfigureAwait(false);
                
             return data.Take(5);
+        }
+
+        private async Task SearchForStocks()
+        {
+            var service = new StockService();
+            var loadingTasks = new List<Task<IEnumerable<StockPrice>>>();
+
+            foreach (var identifier in StockIdentifier.Text.Split(' ', ','))
+            {
+                var loadTask = service.GetStockPricesFor(identifier, CancellationToken.None);
+                loadingTasks.Add(loadTask);
+            }
+
+            var data = await Task.WhenAll(loadingTasks);
+            Stocks.ItemsSource = data.SelectMany(stock => stock);
+
+
         }
         private static Task<List<string>> SearchForStocks(CancellationToken cancellationToken)
         {
@@ -866,6 +891,9 @@ namespace StockAnalyzer.Windows
         {
             Application.Current.Shutdown();
         }
+
+        private static Task<List<string>>
+     
     }
  
 }
