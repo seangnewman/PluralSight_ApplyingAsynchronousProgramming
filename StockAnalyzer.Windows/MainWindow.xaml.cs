@@ -29,8 +29,8 @@ namespace StockAnalyzer.Windows
 
         CancellationTokenSource cancellationTokenSource;
 
-         //private async void Search_Click(object sender, RoutedEventArgs e)
-        private void Search_Click(object sender, RoutedEventArgs e)
+        private async void Search_Click(object sender, RoutedEventArgs e)
+        //private void Search_Click(object sender, RoutedEventArgs e)
         {
 
             //BeforeLoadingStockData();
@@ -759,19 +759,19 @@ namespace StockAnalyzer.Windows
             //AfterLoadingStockData();
             #region Asynchronous Streams and Disposables
             #endregion
-            try
-            {
-                var data = await GetStocksFor(StockIdentifier.Text);
+            //try
+            //{
+            //    var data = await GetStocksFor(StockIdentifier.Text);
 
-                Notes.Text = "Stocks Loaded!";
+            //    Notes.Text = "Stocks Loaded!";
 
-                Stocks.ItemsSource = data;
-            }
-            catch (Exception ex)
-            {
+            //    Stocks.ItemsSource = data;
+            //}
+            //catch (Exception ex)
+            //{
 
-                Notes.Text = ex.Message;
-            }
+            //    Notes.Text = ex.Message;
+            //}
             #endregion
 
             #region Implications of Async and Await
@@ -783,34 +783,55 @@ namespace StockAnalyzer.Windows
             //await new StateMachineDemo().Run();
             #endregion
             #region Deadlocking
+            //try
+            //{
+            //    Task.Run(SearchForStocks).Wait();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Notes.Text = ex.Message;
+            //}
+            #endregion
+
+            #region Report on Progress of a Task
             try
             {
-                Task.Run(SearchForStocks).Wait();
+                BeforeLoadingStockData();
+                var progress = new Progress<IEnumerable<StockPrice>>();
+                progress.ProgressChanged += (_, stocks) => {
+                    StockProgress.Value += 1;
+                    Notes.Text += $"Loaded  {stocks.Count()} for {stocks.First().Identifier} {Environment.NewLine}";
+                };
+                await SearchForStocks(progress);
             }
             catch (Exception ex)
             {
                 Notes.Text = ex.Message;
             }
+            finally
+            {
+                AfterLoadingStockData();
+            }
             #endregion
         }
         private async Task Run()
         {
-            var result = await Task.Run( () => "Pluralsight");
+            var result = await Task.Run(() => "Pluralsight");
 
             if (result == "Pluralsight")
             {
-               Debug.WriteLine(result);
+                Debug.WriteLine(result);
             }
         }
-        private async Task<IEnumerable<StockPrice>>GetStocksFor(string identifier)
+        private async Task<IEnumerable<StockPrice>> GetStocksFor(string identifier)
         {
             var service = new StockService();
             var data = await service.GetStockPricesFor(identifier, CancellationToken.None).ConfigureAwait(false);
-               
+
             return data.Take(5);
         }
 
-        private async Task SearchForStocks()
+        private async Task SearchForStocks(IProgress<IEnumerable<StockPrice>> progress)
         {
             var service = new StockService();
             var loadingTasks = new List<Task<IEnumerable<StockPrice>>>();
@@ -819,6 +840,12 @@ namespace StockAnalyzer.Windows
             {
                 var loadTask = service.GetStockPricesFor(identifier, CancellationToken.None);
                 loadingTasks.Add(loadTask);
+
+                loadTask = loadTask.ContinueWith(completedTask => {
+
+                 progress?.Report(completedTask.Result);
+                    return completedTask.Result;
+                });    
             }
 
             var data = await Task.WhenAll(loadingTasks);
@@ -849,7 +876,7 @@ namespace StockAnalyzer.Windows
             }, cancellationToken);
         }
 
-        private async Task GetStocks()
+        private async Task GetStocks() 
         // The Task returned from an async method is a reference to the operation,  the result of the operation or potential errors
         {
             try
@@ -872,6 +899,8 @@ namespace StockAnalyzer.Windows
             stopwatch.Restart();
             StockProgress.Visibility = Visibility.Visible;
             StockProgress.IsIndeterminate = true;
+            StockProgress.Value = 0;
+            StockProgress.Maximum = StockIdentifier.Text.Split(' ', ',').Length;
         }
 
         private void AfterLoadingStockData()
@@ -892,8 +921,10 @@ namespace StockAnalyzer.Windows
             Application.Current.Shutdown();
         }
 
-        private static Task<List<string>>
-     
+      
+
+
     }
+
  
 }
