@@ -794,15 +794,33 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region Report on Progress of a Task
+            //try
+            //{
+            //    BeforeLoadingStockData();
+            //    var progress = new Progress<IEnumerable<StockPrice>>();
+            //    progress.ProgressChanged += (_, stocks) => {
+            //        StockProgress.Value += 1;
+            //        Notes.Text += $"Loaded  {stocks.Count()} for {stocks.First().Identifier} {Environment.NewLine}";
+            //    };
+            //    await SearchForStocks(progress);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //}
+            #endregion
+
+            #region UsingTaskCompletionSource
             try
             {
                 BeforeLoadingStockData();
-                var progress = new Progress<IEnumerable<StockPrice>>();
-                progress.ProgressChanged += (_, stocks) => {
-                    StockProgress.Value += 1;
-                    Notes.Text += $"Loaded  {stocks.Count()} for {stocks.First().Identifier} {Environment.NewLine}";
-                };
-                await SearchForStocks(progress);
+             
+                var data =  await SearchForStocks();
+                Stocks.ItemsSource = data.Where(price => price.Identifier == StockIdentifier.Text);
             }
             catch (Exception ex)
             {
@@ -829,6 +847,23 @@ namespace StockAnalyzer.Windows
             var data = await service.GetStockPricesFor(identifier, CancellationToken.None).ConfigureAwait(false);
 
             return data.Take(5);
+        }
+
+        private static Task<IEnumerable<StockPrice>> SearchForStocks()
+        {
+            var tcs = new TaskCompletionSource<IEnumerable<StockPrice>>();
+            ThreadPool.QueueUserWorkItem(_ => {
+                var lines = File.ReadAllLines("StockPrices_Small.csv");
+                var prices = new List<StockPrice>();
+
+                foreach (var line in lines.Skip(1))
+                {
+                    prices.Add(StockPrice.FromCSV(line));
+                }
+                tcs.SetResult(prices);      // Communicates the task should be set to completedx.
+            });
+
+            return tcs.Task;
         }
 
         private async Task SearchForStocks(IProgress<IEnumerable<StockPrice>> progress)
