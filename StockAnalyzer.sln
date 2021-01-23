@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockAnalyzer.Tests", "Stoc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockAnalyzer.Windows.Core", "StockAnalyzer.Windows.Core\StockAnalyzer.Windows.Core.csproj", "{0157FCF7-D13A-405A-A479-546362D1E5C2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockAnalyzer.AttachedDetached", "StockAnalyzer.AttachedDetached\StockAnalyzer.AttachedDetached.csproj", "{2905DA1D-6A4E-4927-A6FF-E5C6312CFAAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{0157FCF7-D13A-405A-A479-546362D1E5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0157FCF7-D13A-405A-A479-546362D1E5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0157FCF7-D13A-405A-A479-546362D1E5C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2905DA1D-6A4E-4927-A6FF-E5C6312CFAAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2905DA1D-6A4E-4927-A6FF-E5C6312CFAAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2905DA1D-6A4E-4927-A6FF-E5C6312CFAAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2905DA1D-6A4E-4927-A6FF-E5C6312CFAAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

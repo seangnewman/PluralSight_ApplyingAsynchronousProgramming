@@ -27,7 +27,7 @@ namespace StockAnalyzer.Windows
             InitializeComponent();
         }
 
-        CancellationTokenSource cancellationTokenSource;
+        readonly CancellationTokenSource cancellationTokenSource;
 
         private async void Search_Click(object sender, RoutedEventArgs e)
         //private void Search_Click(object sender, RoutedEventArgs e)
@@ -815,21 +815,38 @@ namespace StockAnalyzer.Windows
             #endregion
 
             #region UsingTaskCompletionSource
-            try
-            {
-                BeforeLoadingStockData();
+            //try
+            //{
+            //    BeforeLoadingStockData();
              
-                var data =  await SearchForStocks();
-                Stocks.ItemsSource = data.Where(price => price.Identifier == StockIdentifier.Text);
-            }
-            catch (Exception ex)
-            {
-                Notes.Text = ex.Message;
-            }
-            finally
-            {
-                AfterLoadingStockData();
-            }
+            //    var data =  await SearchForStocks();
+            //    Stocks.ItemsSource = data.Where(price => price.Identifier == StockIdentifier.Text);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //}
+            #endregion
+            #region Working with Attached and Detached Tasks
+            //try
+            //{
+            //    BeforeLoadingStockData();
+
+            //    var data = await SearchForStocks();
+            //    Stocks.ItemsSource = data.Where(price => price.Identifier == StockIdentifier.Text);
+            //}
+            //catch (Exception ex)
+            //{
+            //    Notes.Text = ex.Message;
+            //}
+            //finally
+            //{
+            //    AfterLoadingStockData();
+            //}
             #endregion
         }
         private async Task Run()
